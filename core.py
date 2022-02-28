@@ -1,13 +1,15 @@
 from dataclasses import dataclass
 from enum import Enum
 from random import random, shuffle
+from socket import socket, SOL_SOCKET, SO_REUSEADDR
+
+from champlistloader import load_some_champs
 
 _BEATS = {
     (1, 3),
     (3, 2),
     (2, 1)
 }
-
 
 class Shape(Enum):
     """
@@ -200,3 +202,10 @@ class Match:
     @property
     def rounds(self) -> list[dict[str, PairThrow]]:
         return self._rounds
+
+
+def main():
+    pass
+
+if __name__ == '__main__':
+    main()
