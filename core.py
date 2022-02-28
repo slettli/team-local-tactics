@@ -203,6 +203,7 @@ class Match:
         return self._rounds
 
 # Functions that fetch and parses list of champions
+# Originally in a separate file but due to circular imports I just put them here for now...
 def _parse_champ(champ_text: str) -> Champion:
     name, rock, paper, scissors = champ_text.split(sep=',')
     return Champion(name, float(rock), float(paper), float(scissors))
@@ -218,13 +219,14 @@ def from_csv(filename: str) -> dict[str, Champion]:
 def load_some_champs():
     return from_csv('some_champs.txt')
 
-# Receive input from clients and call appropriate methods. Returns stuff to send back
+# Receive input from clients and call appropriate methods, return formatted reply to main()
 def server_command(command):
     match (command):
-        case "champions":
+        case "champions": # Get dict of champions and encode with pickle
             return pickle.dumps(load_some_champs())
 
 # Main thread to manage functionality
+# TODO make it loop until asked to exit
 def main():
     # Initialize TCP socket and listen
     sock = socket()
@@ -232,9 +234,10 @@ def main():
     sock.bind(("localhost", 6666))
     sock.listen()
     print("Server ready to receive input")
+    # Get command and forward to server_command
     conn, _ = sock.accept()
     command = conn.recv(1024).decode()
-    response = server_command(command)
+    response = server_command(command) # Reply with returned answer from server_command
     print(response)
     conn.send(response)
     conn.close()

@@ -90,7 +90,7 @@ def print_match_summary(match: Match) -> None:
     else:
         print('\nDraw :expressionless:')
 
-# Asks server for list of champions and decode them
+# Asks server for list of champions and decodes them using pickle
 def get_champions(sock):
     command = "champions"
     sock.send(command.encode())
@@ -123,6 +123,10 @@ def main() -> None:
 
     print_available_champs(champions)
     print('\n')
+
+    # TODO make below stuff networked. 
+    # TODO move parsing to server
+    # TODO move keeping track of champions to server
 
     player1 = []
     player2 = []
