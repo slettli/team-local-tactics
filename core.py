@@ -2,8 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from random import random, shuffle
 from socket import socket, SOL_SOCKET, SO_REUSEADDR
-
-from champlistloader import load_some_champs
+import pickle
 
 _BEATS = {
     (1, 3),
@@ -203,9 +202,43 @@ class Match:
     def rounds(self) -> list[dict[str, PairThrow]]:
         return self._rounds
 
+# Functions that fetch and parses list of champions
+def _parse_champ(champ_text: str) -> Champion:
+    name, rock, paper, scissors = champ_text.split(sep=',')
+    return Champion(name, float(rock), float(paper), float(scissors))
 
+def from_csv(filename: str) -> dict[str, Champion]:
+    champions = {}
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            champ = _parse_champ(line)
+            champions[champ.name] = champ
+    return champions
+
+def load_some_champs():
+    return from_csv('some_champs.txt')
+
+# Receive input from clients and call appropriate methods. Returns stuff to send back
+def server_command(command):
+    match (command):
+        case "champions":
+            return pickle.dumps(load_some_champs())
+
+# Main thread to manage functionality
 def main():
-    pass
+    # Initialize TCP socket and listen
+    sock = socket()
+    sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    sock.bind(("localhost", 6666))
+    sock.listen()
+    print("Server ready to receive input")
+    conn, _ = sock.accept()
+    command = conn.recv(1024).decode()
+    response = server_command(command)
+    print(response)
+    conn.send(response)
+    conn.close()
+
 
 if __name__ == '__main__':
     main()

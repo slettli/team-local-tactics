@@ -2,8 +2,8 @@ from rich import print
 from rich.prompt import Prompt
 from rich.table import Table
 from socket import socket
+import pickle
 
-from champlistloader import load_some_champs
 from core import Champion, Match, Shape, Team
 
 
@@ -90,13 +90,12 @@ def print_match_summary(match: Match) -> None:
     else:
         print('\nDraw :expressionless:')
 
-# Asks server for list of champions
+# Asks server for list of champions and decode them
 def get_champions(sock):
     command = "champions"
     sock.send(command.encode())
-    champions = sock.recv(1024).decode()
 
-    return champions
+    return pickle.loads(sock.recv(1024))
 
 # Takes server command from main() and forwards to appropriate method
 def server_command(sock,command):
