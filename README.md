@@ -34,7 +34,7 @@ Client.py must be run in two instances, one for each player.
 * [**Daniel**](https://github.com/daniel-heres) - Base code from team-local-tactics
 
 ## Note to TA's
-This readme will probably change as I add more features and figure out the inner workings of the complete assignment. Not everything here is true at the moment, like running client.py in separate terminals. That doesn't work yet.
+This readme will probably change as I add more features and figure out the inner workings of the complete assignment. Not everything written above is true at the moment, like running client.py in separate terminals. That doesn't work yet.
 
 ### Current progress
 #### Server
