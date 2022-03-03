@@ -35,3 +35,21 @@ Client.py must be run in two instances, one for each player.
 
 ## Note to TA's
 This readme will probably change as I add more features and figure out the inner workings of the complete assignment. Not everything here is true at the moment, like running client.py in separate terminals. That doesn't work yet.
+
+### Current progress
+#### Server
+* Server and client can communicate
+* Server handles player teams and sends to client
+* Server sends champion list to client
+#### Client
+* Client offers command menu to interact with server
+  * Play, reset teams, shut down etc.
+* Client takes champion selection input and forwards to server
+* Game can be 'played'
+
+### Missing features
+* Separate player clients doesn't work yet
+* Match logic is still performed client-side
+* Database does not communicate with server over network
+* Server does not generate formatted output for clients (should it?)
+* No form of concurrency, so server will have a hard time communicating with two clients
