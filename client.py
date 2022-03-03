@@ -98,7 +98,7 @@ def send_team_selection(sock,command):
     pass
 
 # Used for forwarding a simple text based command, return reply
-def send_command(sock,command,data):
+def send_command(sock,command,data=''):
     sock.send(pickle.dumps((command,data))) # Always pickle
 
     return pickle.loads(sock.recv(1024)) # Return reply
@@ -107,11 +107,11 @@ def send_command(sock,command,data):
 def server_command(sock,command):
     match (command):
         case 'champions':
-            return send_command(sock,command, '')
+            return send_command(sock,command)
         case 'teams':
-            return send_command(sock,command, '')
+            return send_command(sock,command)
         case 'quit':
-            send_command(sock, command, '')
+            send_command(sock, command)
         
 
 # Fetch list of champions: db > server > client 
@@ -133,26 +133,25 @@ def play(sock):
     # TODO move parsing to server
     # TODO move keeping track of champions to server
 
-    teams = send_command('teams') # Initial team fetch
+    teams = send_command(sock,'teams') # Initial team fetch
+    print(teams)
 
     # Champion selection. Ask server for teams before each player picks again.
     for _ in range(2): 
-        teams = send_command('teams')
+        teams = send_command(sock,'teams')
         print(teams[1])
         print(teams[2])
-        input_champion(sock,'Player 1', 'red', champions, teams[1], teams[2])
-        teams = send_command('teams')
-        input_champion(sock,'Player 2', 'blue', champions, teams[2], teams[1])
+        input_champion(sock,'Player 1', 'red', champions, teams[0], teams[1])
+        teams = send_command(sock,'teams')
+        input_champion(sock,'Player 2', 'blue', champions, teams[1], teams[0])
 
     print('\n')
 
-
-
-    teams = send_command('teams')
+    teams = send_command(sock,'teams')
     # Match
     match = Match(
-        Team([champions[name] for name in teams[1]]),
-        Team([champions[name] for name in teams[2]])
+        Team([champions[name] for name in teams[0]]),
+        Team([champions[name] for name in teams[1]])
     )
     match.play()
 
@@ -161,23 +160,22 @@ def play(sock):
 
 def main() -> None:
     # Initialize TCP connection to server
-    sock = socket()
-    server_address = ("localhost", 6666)
-    sock.connect(server_address)
+    with socket() as sock:
+        SERVER_ADDRESS = ("localhost", 6666)
+        sock.connect(SERVER_ADDRESS)
 
-    while True: #network loop      
-        # Connection established, ask for command
-        command = input("Welcome to TNT. Commands:\nplay - play\nquit - quit the game and shut down server\n")
+        while True: #network loop      
+            # Connection established, ask for command
+            command = input("Welcome to TNT. Commands:\nplay - play\nquit - quit the game and shut down server\n")
 
-        # Client commands 
-        match (command):
-            case ('quit'):
-                print("Thanks for playing.")
-                break
-            case ('play'): 
-                play(sock)
+            # Client commands 
+            match (command):
+                case ('quit'):
+                    send_command(sock,'quit')
+                    print("Thanks for playing.")
+                    break
+                case ('play'): 
+                    play(sock)
         
-    sock.close() # Close socket and let function exit if loop broken by player
-
 if __name__ == '__main__':
     main()
