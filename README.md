@@ -23,10 +23,10 @@ Client.py must be run in two instances, one for each player.
 
 ## Implementation
 * The game (will) consist, in addition to the core gameplay code, of three separate scripts:
-  * server.py - server script, handles communication between clients and database
-  * client.py - client (player) script, takes input and outputs results to players
-  * database.py - script responsible for updating and fetching database
-* The three above mentioned scripts communice through TCP using sockets. 
+  * server.py - handles communication to clients and database
+  * database.py - responsible for updating and fetching database
+  * client.py - takes input and shows results to players
+* The three scripts communicate through TCP using sockets. 
 * Pickle is used for converting data into a byte stream before sending over the TCP connection.
 
 ## Authors
