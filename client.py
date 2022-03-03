@@ -1,3 +1,4 @@
+from turtle import forward
 from rich import print
 from rich.prompt import Prompt
 from rich.table import Table
@@ -6,7 +7,7 @@ import pickle
 
 from core import Champion, Match, Shape, Team
 
-
+# Can stay in client
 def print_available_champs(champions: dict[Champion]) -> None:
 
     # Create a table containing available champions
@@ -25,8 +26,10 @@ def print_available_champs(champions: dict[Champion]) -> None:
 
     print(available_champs)
 
-
-def input_champion(prompt: str,
+# Checks if champion is available, forwards choice if accepted to server.
+# Should be moved server side.
+def input_champion(sock,
+                   prompt: str,
                    color: str,
                    champions: dict[Champion],
                    player1: list[str],
@@ -42,8 +45,8 @@ def input_champion(prompt: str,
                 print(f'{name} is already in your team. Try again.')
             case name if name in player2:
                 print(f'{name} is in the enemy team. Try again.')
-            case _:
-                player1.append(name)
+            case _: # send champion selection to server in form of tuple playername, champ name
+                send_command(sock,'select',(prompt,name))
                 break
 
 
@@ -90,36 +93,38 @@ def print_match_summary(match: Match) -> None:
     else:
         print('\nDraw :expressionless:')
 
-# Asks server for list of champions and decodes them using pickle
-def get_champions(sock):
-    command = "champions"
-    sock.send(command.encode())
+# Forwards champion selection to server
+def send_team_selection(sock,command):
+    pass
 
-    return pickle.loads(sock.recv(1024))
+# Used for forwarding a simple text based command, return reply
+def send_command(sock,command,data):
+    sock.send(pickle.dumps((command,data))) # Always pickle
+
+    return pickle.loads(sock.recv(1024)) # Return reply
 
 # Takes server command from main() and forwards to appropriate method
 def server_command(sock,command):
     match (command):
         case 'champions':
-            return get_champions(sock)
+            return send_command(sock,command, '')
+        case 'teams':
+            return send_command(sock,command, '')
+        case 'quit':
+            send_command(sock, command, '')
+        
 
-def main() -> None:
-    # Initialize TCP connection to server
-    sock = socket()
-    server_address = ("localhost", 6666)
-    sock.connect(server_address)
-
-    # Fetch list of champions: db > server > client
+# Fetch list of champions: db > server > client 
+def play(sock):
     print("Asking server for champions...")
     champions = server_command(sock,"champions")
     print(f"Received reply: {champions}")
-    sock.close()
 
     print('\n'
-          'Welcome to [bold yellow]Team Local Tactics[/bold yellow]!'
-          '\n'
-          'Each player choose a champion each time.'
-          '\n')
+        'Welcome to [bold yellow]Team Local Tactics[/bold yellow]!'
+        '\n'
+        'Each player choose a champion each time.'
+        '\n')
 
     print_available_champs(champions)
     print('\n')
@@ -128,26 +133,51 @@ def main() -> None:
     # TODO move parsing to server
     # TODO move keeping track of champions to server
 
-    player1 = []
-    player2 = []
+    teams = send_command('teams') # Initial team fetch
 
-    # Champion selection
+    # Champion selection. Ask server for teams before each player picks again.
     for _ in range(2): 
-        input_champion('Player 1', 'red', champions, player1, player2)
-        input_champion('Player 2', 'blue', champions, player2, player1)
+        teams = send_command('teams')
+        print(teams[1])
+        print(teams[2])
+        input_champion(sock,'Player 1', 'red', champions, teams[1], teams[2])
+        teams = send_command('teams')
+        input_champion(sock,'Player 2', 'blue', champions, teams[2], teams[1])
 
     print('\n')
 
+
+
+    teams = send_command('teams')
     # Match
     match = Match(
-        Team([champions[name] for name in player1]),
-        Team([champions[name] for name in player2])
+        Team([champions[name] for name in teams[1]]),
+        Team([champions[name] for name in teams[2]])
     )
     match.play()
 
     # Print a summary
     print_match_summary(match)
 
+def main() -> None:
+    # Initialize TCP connection to server
+    sock = socket()
+    server_address = ("localhost", 6666)
+    sock.connect(server_address)
+
+    while True: #network loop      
+        # Connection established, ask for command
+        command = input("Welcome to TNT. Commands:\nplay - play\nquit - quit the game and shut down server\n")
+
+        # Client commands 
+        match (command):
+            case ('quit'):
+                print("Thanks for playing.")
+                break
+            case ('play'): 
+                play(sock)
+        
+    sock.close() # Close socket and let function exit if loop broken by player
 
 if __name__ == '__main__':
     main()
