@@ -1,3 +1,4 @@
+from re import S
 from turtle import forward
 from rich import print
 from rich.prompt import Prompt
@@ -46,7 +47,7 @@ def input_champion(sock,
             case name if name in player2:
                 print(f'{name} is in the enemy team. Try again.')
             case _: # send champion selection to server in form of tuple playername, champ name
-                send_command(sock,'select',(prompt,name))
+                a = send_command(sock,'select',(prompt,name))
                 break
 
 
@@ -111,16 +112,10 @@ def server_command(sock,command):
         
 # Fetch list of champions: db > server > client 
 # More or less team-local-tactics.py, kept here while gradually slicing up into separate methods and server.py
-def play(sock):
+def play(sock,player_id):
     print("Asking server for champions...")
     champions = server_command(sock,"champions")
     print(f"Received reply: {champions}")
-
-    print('\n'
-        'Welcome to [bold yellow]Team Local Tactics[/bold yellow]!'
-        '\n'
-        'Each player choose a champion each time.'
-        '\n')
 
     print_available_champs(champions)
     print('\n')
@@ -156,26 +151,60 @@ def play(sock):
 
 # Handles initial connection, calls other methods based on player input
 def main() -> None:
+    playerID = ''
     # Initialize TCP connection to server
     with socket() as sock:
+        # TODO make client not crash if server not found
+        # Connect to server
         SERVER_ADDRESS = ("localhost", 6666)
         sock.connect(SERVER_ADDRESS)
         print(f'Client address {sock.getsockname()}')
-        print(f'Connected to server {sock.getpeername()}\n')
+        print(f'Connected to server {sock.getpeername()}')
 
-        while True: #network loop      
-            # Connection established, ask for command
-            print('Welcome to TNT. Commands:\nplay - play\nquit - quit the game and shut down server\n')
-            command = input('Enter command: ')
+        # Welcome message and table of commands
+        print('\n'
+                'Welcome to [bold yellow]Team Network Tactics[/bold yellow] alpha early access crowdfunded edition (final name pending)!'
+                '\n')
+
+        initial_info_table = Table(title='Commands')
+        initial_info_table.add_column("Command", style="cyan", no_wrap=True)
+        initial_info_table.add_column("Function", no_wrap=True)
+        initial_info_table.add_row(*("Play","Starts the game"))
+        initial_info_table.add_row(*("Connect","Connect to the server and get Player ID (does nothing rn)"))
+        initial_info_table.add_row(*("Disconnect","Disconnect and wipe team"))
+        initial_info_table.add_row(*("Quit","Shut down the server and client"))
+        print(initial_info_table)
+
+        # Command loop     
+        while True: 
+            command = input('\nEnter command: ')
+            command = command.lower()
 
             # Client commands 
             match (command):
-                case ('quit'):
+                case ('connect'): # Connect and get assigned playerID if available
+                    if playerID == '': # Don't attempt to connect if already assigned
+                        playerID = send_command(sock,'connect') # Assign player ID
+                        if playerID == 'FULL':
+                            print('Sorry, the TNT servers are full at the moment. Please try again later.\n')
+                            playerID = ''
+                        else:
+                            print(f'Welcome, {playerID}. Please pick the play option.')
+                case ('play'): # Start playing the game
+                    '''if playerID == '':
+                        print("Error - Not assigned Player ID.")
+                    else:
+                        play(sock,playerID)'''
+                    play(sock,playerID)
+                case ('disconnect'): # Tell server to disconnect and wipe team. TODO make client actually disconnect on network level. Make quit client?
+                    send_command(sock,'disconnect',playerID)
+                    print('Disconnected. Thanks for playing.')
+                    break
+                case ('quit'): # Tell server to shut down, quit client. Make shut down server and quit client separate?
                     send_command(sock,'quit')
                     print('Server shutting down. Thanks for playing.')
                     break
-                case ('play'): 
-                    play(sock)
+
         
 if __name__ == '__main__':
     main()

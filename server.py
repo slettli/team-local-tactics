@@ -7,8 +7,12 @@ import pickle
 from core import Champion, Match, Shape, Team
 from champlistloader import load_some_champs
 
-player1 = [] # Player 1's team
-player2 = [] # Player 2's team
+# Used to prevent more than two clients connecting. Possibly shouldn't be global, or two bools.
+P1_CONNECTED = False
+P2_CONNECTED = False
+
+P1_TEAM = [] # Player 1's team
+P2_TEAM = [] # Player 2's team
 
 # TODO Handle playing the match using core, return result
 def play_match():
@@ -23,21 +27,37 @@ def send_client(sock,conn,_,load):
 # Add selected champion to a player's team
 def add_to_team(player,champion):
     if player == 'Player 1':
-        player1.append(champion)
+        P1_TEAM.append(champion)
     else:
-        player2.append(champion)
+        P2_TEAM.append(champion)
     print(f"Added {champion} to {player}'s team\n")
 
 # Receive input from clients and call appropriate methods
 # Send reply to client
 def server_command(sock,conn,_,command,load):
+    global NUM_PLAYERS, MAX_PLAYERS, P1_TEAM, P2_TEAM
+
     match (command):
+        case 'connect': # New client connects. Check if player slot available, return error or player ID to client
+            if P1_CONNECTED == False:
+                send_client(sock,conn,_,"Player 1")
+            elif P2_CONNECTED == False:
+                send_client(sock,conn,_,"Player 2")
+            else:
+                send_client(sock,conn,_,"FULL") # Tell client server is full
+        case 'disconnect': # Mark player slot as open, wipe corresponding player's team
+            if load == "Player 1":
+                P1_TEAM = []
+                print(f"Disconnect request received from {_}, wiping {load}'s team.")
+            elif load == "Player 2":
+                P2_TEAM = [] # Player 2's team
+                print(f"Disconnect request received from {_}, wiping {load}'s team.")
         case 'champions': # Get dict of champions and encode with pickle
             print('Champion list requested')
             send_client(sock,conn,_,load_some_champs())
         case 'teams': # Get list of current teams - player1 and player2 arrays
             print('Team lists requested')
-            send_client(sock,conn,_,(player1,player2)) # Return pickled tuple of player teams
+            send_client(sock,conn,_,(P1_TEAM,P2_TEAM)) # Return pickled tuple of player teams
         case 'select':
             print('Adding to team requested')
             add_to_team(load[0],load[1])
