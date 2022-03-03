@@ -1,3 +1,4 @@
+from logging import exception
 from re import S
 from turtle import forward
 from rich import print
@@ -129,8 +130,8 @@ def play(sock,player_id):
     # Champion selection. Ask server for teams before each player picks again.
     for _ in range(2): 
         teams = send_command(sock,'teams')
+        print(teams[0])
         print(teams[1])
-        print(teams[2])
         input_champion(sock,'Player 1', 'red', champions, teams[0], teams[1])
         teams = send_command(sock,'teams')
         input_champion(sock,'Player 2', 'blue', champions, teams[1], teams[0])
@@ -148,6 +149,7 @@ def play(sock,player_id):
 
     # Print a summary
     print_match_summary(match)
+    send_command(sock,"teamreset") # Tell server to wipe teams so you can play again without restarting server. This will be moved to server later
 
 # Handles initial connection, calls other methods based on player input
 def main() -> None:
@@ -170,26 +172,31 @@ def main() -> None:
         initial_info_table.add_column("Command", style="cyan", no_wrap=True)
         initial_info_table.add_column("Function", no_wrap=True)
         initial_info_table.add_row(*("Play","Starts the game"))
-        initial_info_table.add_row(*("Connect","Connect to the server and get Player ID (does nothing rn)"))
-        initial_info_table.add_row(*("Disconnect","Disconnect and wipe team"))
+        #initial_info_table.add_row(*("Connect","Connect to the server and get Player ID [PLACEHOLDER]"))
+        #initial_info_table.add_row(*("Disconnect","Disconnect and wipe team"))
         initial_info_table.add_row(*("Quit","Shut down the server and client"))
-        print(initial_info_table)
+        #initial_info_table.add_row(*("Debug","Show (very) secret debug commands [PLACEHOLDER]"))
 
         # Command loop     
         while True: 
+            print(initial_info_table)
+
             command = input('\nEnter command: ')
             command = command.lower()
 
             # Client commands 
             match (command):
-                case ('connect'): # Connect and get assigned playerID if available
-                    if playerID == '': # Don't attempt to connect if already assigned
+                case ('connect'): # Connect and get assigned playerID if available - Not fully implemented
+                    sock.connect(SERVER_ADDRESS)
+                    print(f'Client address {sock.getsockname()}')
+                    print(f'Connected to server {sock.getpeername()}')
+                    '''if playerID == '': # Don't attempt to connect if already assigned
                         playerID = send_command(sock,'connect') # Assign player ID
                         if playerID == 'FULL':
                             print('Sorry, the TNT servers are full at the moment. Please try again later.\n')
                             playerID = ''
                         else:
-                            print(f'Welcome, {playerID}. Please pick the play option.')
+                            print(f'Welcome, {playerID}. Please pick the play option.')'''
                 case ('play'): # Start playing the game
                     '''if playerID == '':
                         print("Error - Not assigned Player ID.")

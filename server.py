@@ -64,6 +64,12 @@ def server_command(sock,conn,_,command,load):
             send_client(sock,conn,_,"OK") # Use 200 instead?
         case 'play': # Play match, return result
             pass
+        case 'teamreset': # Reset teams 
+            P1_TEAM = []
+            P2_TEAM = []
+            send_client(sock,conn,_,"OK") # Use 200 instead?
+        case 'playerreset': # Will reset connected players
+            pass
 
 # Main thread to manage functionality
 def main():
@@ -72,13 +78,15 @@ def main():
         sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         sock.bind(('localhost', 6666))
         sock.listen() # Should this be inside the loop?
-        print('Welcome to the TNT super early access indiegogo crowdfund server.\n')
+        print('Welcome to the TNT super early access indiegogo crowdfund server.')
+        print(f'Listening at {sock.getsockname()}\n')
+        conn, _ = sock.accept()
 
         while True: # Network loop
+            print(f'Peer {_} connected\n')
             print(f'Listening at {sock.getsockname()}\n')
             # Get command and forward to server_command
             # Data will always be sent as an array consisting of command,data
-            conn, _ = sock.accept()
             received = pickle.loads(conn.recv(1024))
             print(f'Received request from {_}:\n{received}\n')
             command = received[0]
