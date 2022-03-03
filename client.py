@@ -7,7 +7,7 @@ import pickle
 
 from core import Champion, Match, Shape, Team
 
-# Can stay in client
+# Can stay in client. Formats and prints champion list
 def print_available_champs(champions: dict[Champion]) -> None:
 
     # Create a table containing available champions
@@ -93,11 +93,7 @@ def print_match_summary(match: Match) -> None:
     else:
         print('\nDraw :expressionless:')
 
-# Forwards champion selection to server
-def send_team_selection(sock,command):
-    pass
-
-# Used for forwarding a simple text based command, return reply
+# Used for forwarding commands, return reply. Pickles and unpickles
 def send_command(sock,command,data=''):
     sock.send(pickle.dumps((command,data))) # Always pickle
 
@@ -113,8 +109,8 @@ def server_command(sock,command):
         case 'quit':
             send_command(sock, command)
         
-
 # Fetch list of champions: db > server > client 
+# More or less team-local-tactics.py, kept here while gradually slicing up into separate methods and server.py
 def play(sock):
     print("Asking server for champions...")
     champions = server_command(sock,"champions")
@@ -131,7 +127,6 @@ def play(sock):
 
     # TODO make below stuff networked. 
     # TODO move parsing to server
-    # TODO move keeping track of champions to server
 
     teams = send_command(sock,'teams') # Initial team fetch
     print(teams)
@@ -147,8 +142,9 @@ def play(sock):
 
     print('\n')
 
+    # Fetch (hopefully) finished teams to run match
     teams = send_command(sock,'teams')
-    # Match
+    # Match - Should be moved to server.py, with server only returning results.
     match = Match(
         Team([champions[name] for name in teams[0]]),
         Team([champions[name] for name in teams[1]])
@@ -158,21 +154,25 @@ def play(sock):
     # Print a summary
     print_match_summary(match)
 
+# Handles initial connection, calls other methods based on player input
 def main() -> None:
     # Initialize TCP connection to server
     with socket() as sock:
         SERVER_ADDRESS = ("localhost", 6666)
         sock.connect(SERVER_ADDRESS)
+        print(f'Client address {sock.getsockname()}')
+        print(f'Connected to server {sock.getpeername()}\n')
 
         while True: #network loop      
             # Connection established, ask for command
-            command = input("Welcome to TNT. Commands:\nplay - play\nquit - quit the game and shut down server\n")
+            print('Welcome to TNT. Commands:\nplay - play\nquit - quit the game and shut down server\n')
+            command = input('Enter command: ')
 
             # Client commands 
             match (command):
                 case ('quit'):
                     send_command(sock,'quit')
-                    print("Thanks for playing.")
+                    print('Server shutting down. Thanks for playing.')
                     break
                 case ('play'): 
                     play(sock)

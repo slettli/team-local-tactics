@@ -1,7 +1,7 @@
 from core import Champion
 
 # Functions that fetch and parses list of champions
-# Originally in a separate file but due to circular imports I just put them here for now...
+# TODO make this send data to server over socket
 def _parse_champ(champ_text: str) -> Champion:
     name, rock, paper, scissors = champ_text.split(sep=',')
     return Champion(name, float(rock), float(paper), float(scissors))

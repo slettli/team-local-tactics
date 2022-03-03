@@ -7,8 +7,8 @@ import pickle
 from core import Champion, Match, Shape, Team
 from champlistloader import load_some_champs
 
-player1 = [] 
-player2 = []
+player1 = [] # Player 1's team
+player2 = [] # Player 2's team
 
 # TODO Handle playing the match using core, return result
 def play_match():
@@ -41,17 +41,18 @@ def server_command(sock,conn,_,command,load):
         case 'select':
             print('Adding to team requested')
             add_to_team(load[0],load[1])
+            send_client(sock,conn,_,"OK") # Use 200 instead?
         case 'play': # Play match, return result
             pass
 
 # Main thread to manage functionality
-# TODO make it loop until asked to exit
 def main():
     # Initialize TCP socket and listen
     with socket() as sock:
         sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         sock.bind(('localhost', 6666))
         sock.listen() # Should this be inside the loop?
+        print('Welcome to the TNT super early access indiegogo crowdfund server.\n')
 
         while True: # Network loop
             print(f'Listening at {sock.getsockname()}\n')
@@ -66,6 +67,7 @@ def main():
             # Quit and shut down server if requested, else handle command
             if command == 'quit': 
                 print('Shutdown request received.')
+                send_client(sock,conn,_,"Bye") # Change to appropriate code
                 conn.close()
                 print('Connection closed. Shutting down.')
                 break
