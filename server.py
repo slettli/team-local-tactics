@@ -1,8 +1,7 @@
 from rich import print
 from rich.prompt import Prompt
 from rich.table import Table
-from socket import socket, SOL_SOCKET, SO_REUSEADDR, AF_INET, SOCK_DGRAM
-import pickle
+from socket import socket, SOL_SOCKET, SO_REUSEADDR
 from database import load_some_champs
 
 from core import Champion, Match, Shape, Team
@@ -28,6 +27,7 @@ def load_some_champs():
 
     return champs # Return reply, HOPEFULLY CHAMPS
 
+# Used to send command when server acts as client, like with database
 def send_command(sock,command,data=''):
     sock.send(pickle.dumps((command,data))) # Always pickle
     return pickle.loads(sock.recv(1024)) # Return reply

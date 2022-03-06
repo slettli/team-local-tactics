@@ -1,6 +1,6 @@
 from core import Champion
 
-from socket import socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_REUSEADDR
+from socket import socket, SOL_SOCKET, SO_REUSEADDR
 import pickle
 
 # Functions that fetch and parses list of champions
@@ -23,7 +23,6 @@ def send_client(sock,conn,_,load):
     print(f'Sent data to {_}, showing the unpickled format:\n{load}\n')
 
 # Listen to and return champions in pickled format when requested
-# Uses UDP for now
 def load_some_champs():
     with socket() as sock:
         sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -49,6 +48,8 @@ def load_some_champs():
                 send_client(sock,conn,_,champions)                
                 print("Sent champions")
                 conn.close()
+            elif command == "QUIT": #TODO quit command
+                pass
 
 def main():
     print("Database loading")
