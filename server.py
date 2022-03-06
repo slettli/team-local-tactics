@@ -18,11 +18,11 @@ P2_TEAM = [] # Player 2's team
 def play_match():
     pass
 
-# Pickle and send whatever to client
+# Pickle and send whatever to client or database. Yeah, bad name for the function.
 def send_client(sock,conn,_,load):
     pickled = pickle.dumps(load) #always pickle
     conn.send(pickled)
-    print(f'Sent response to client {_}, showing the unpickled format:\n{load}\n')
+    print(f'Sent data to {_}, showing the unpickled format:\n{load}\n')
 
 # Add selected champion to a player's team
 def add_to_team(player,champion):
