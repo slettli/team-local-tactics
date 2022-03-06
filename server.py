@@ -2,7 +2,7 @@ from rich import print
 from rich.prompt import Prompt
 from rich.table import Table
 from socket import socket, SOL_SOCKET, SO_REUSEADDR
-from database import load_some_champs
+import pickle
 
 from core import Champion, Match, Shape, Team
 
