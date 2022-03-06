@@ -1,11 +1,11 @@
 from rich import print
 from rich.prompt import Prompt
 from rich.table import Table
-from socket import socket, SOL_SOCKET, SO_REUSEADDR
+from socket import socket, SOL_SOCKET, SO_REUSEADDR, AF_INET, SOCK_DGRAM
 import pickle
+from database import load_some_champs
 
 from core import Champion, Match, Shape, Team
-from champlistloader import load_some_champs
 
 # Used to prevent more than two clients connecting. Possibly shouldn't be global, or two bools.
 P1_CONNECTED = False
@@ -17,6 +17,20 @@ P2_TEAM = [] # Player 2's team
 # TODO Handle playing the match using core, return result
 def play_match():
     pass
+
+# Helper function for getting champions specifically. Returns champions
+def load_some_champs():
+    with socket() as sock:
+        DB_ADDRESS = ("localhost", 5556)
+        sock.connect(DB_ADDRESS)
+        print(f'Connected to server {sock.getpeername()}')
+        champs= send_command(sock,"GET_CHAMPS")
+
+    return champs # Return reply, HOPEFULLY CHAMPS
+
+def send_command(sock,command,data=''):
+    sock.send(pickle.dumps((command,data))) # Always pickle
+    return pickle.loads(sock.recv(1024)) # Return reply
 
 # Pickle and send whatever to client or database. Yeah, bad name for the function.
 def send_client(sock,conn,_,load):
@@ -76,7 +90,7 @@ def main():
     # Initialize TCP socket and listen
     with socket() as sock:
         sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        sock.bind(('localhost', 6666))
+        sock.bind(('localhost', 5555))
         sock.listen() # Should this be inside the loop?
         print('Welcome to the TNT super early access indiegogo crowdfund server.')
         print(f'Listening at {sock.getsockname()}\n')

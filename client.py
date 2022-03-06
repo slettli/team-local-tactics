@@ -158,7 +158,7 @@ def main() -> None:
     with socket() as sock:
         # TODO make client not crash if server not found
         # Connect to server
-        SERVER_ADDRESS = ("localhost", 6666)
+        SERVER_ADDRESS = ("localhost", 5555)
         sock.connect(SERVER_ADDRESS)
         print(f'Client address {sock.getsockname()}')
         print(f'Connected to server {sock.getpeername()}')
