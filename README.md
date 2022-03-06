@@ -46,10 +46,11 @@ This readme will probably change as I add more features and figure out the inner
   * Play, reset teams, shut down etc.
 * Client takes champion selection input and forwards to server
 * Game can be 'played'
+#### Datbase
+* Database transmits champions to Server through sockets
 
 ### Missing features
 * Separate player clients doesn't work yet
 * Match logic is still performed client-side
-* Database does not communicate with server over network
 * Server does not generate formatted output for clients (should it?)
 * No form of concurrency, so server will have a hard time communicating with two clients
