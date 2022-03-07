@@ -21,8 +21,9 @@ def play_match():
         Team([champs[name] for name in P1_TEAM]),
         Team([champs[name] for name in P2_TEAM])
     )
-    match.play()
-    return match
+    match.play() # Play the match
+    send_database("SAVE_MATCH",match.score) # Tell database to store results
+    return match # Return match object to send back to clients TODO change to only reuturning results to clients
 
 # Send stuff to database. Request champions, send match result
 def send_database(command,data=''):
