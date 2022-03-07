@@ -27,6 +27,16 @@ def load_some_champs():
 
     return champs # Return reply, HOPEFULLY CHAMPS
 
+# Send match result to database.py
+def save_match(result):
+    with socket() as sock:
+        DB_ADDRESS = ("localhost", 5556)
+        sock.connect(DB_ADDRESS)
+        print(f'Connected to server {sock.getpeername()}')
+        champs= send_command(sock,"SAVE_MATCH",result)
+
+    return champs # Return reply, HOPEFULLY CHAMPS
+
 # Used to send command when server acts as client, like with database
 def send_command(sock,command,data=''):
     sock.send(pickle.dumps((command,data))) # Always pickle
@@ -78,6 +88,8 @@ def server_command(sock,conn,_,command,load):
             send_client(sock,conn,_,"OK") # Use 200 instead?
         case 'play': # Play match, return result
             pass
+        case 'SAVE_MATCH':
+            save_match(load)
         case 'teamreset': # Reset teams 
             P1_TEAM = []
             P2_TEAM = []

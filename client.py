@@ -149,6 +149,7 @@ def play(sock,player_id):
 
     # Print a summary
     print_match_summary(match)
+    send_command(sock, "SAVE_MATCH", match.score) # Send match result to server to store in DB 
     send_command(sock,"teamreset") # Tell server to wipe teams so you can play again without restarting server. This will be moved to server later
 
 # Handles initial connection, calls other methods based on player input

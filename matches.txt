@@ -1,0 +1,6 @@
+Match history. Format:
+Match number , Winner(0=draw,1=player1,2=player2) , Player 1 score , Player 2 score
+0,0,0,0
+1,2,2,4
+2,2,0,6
+3,2,2,4

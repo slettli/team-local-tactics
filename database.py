@@ -16,6 +16,29 @@ def from_csv(filename: str) -> dict[str, Champion]:
             champions[champ.name] = champ
     return champions
 
+# Saves match history to matches.txt
+# Format: matchnum, playerwinner, player1score, player2score
+def save_match(result):
+    matchnum = 0
+    # Get current match num
+    with open ('matches.txt') as f:
+        for line in f:
+            pass
+        last_line = line
+        matchnum = int(last_line[0]) + 1 # Append to number of matches
+
+    with open('matches.txt', 'a') as f:
+        # Find last line to get newest match num
+        p1 = result[0]
+        p2 = result[1]
+        if p1 < p2: # P2 wins
+            winner = "2"
+        elif p2 < p1: # P1 wins
+            winner = "1"
+        else: # Draw
+            winner = "0"
+        f.write(f"\n{matchnum},{winner},{p1},{p2}") # Write result
+
 # Pickle and send whatever to client or database. Yeah, bad name for the function.
 def send_client(sock,conn,_,load):
     pickled = pickle.dumps(load) #always pickle
@@ -48,6 +71,9 @@ def load_some_champs():
                 send_client(sock,conn,_,champions)                
                 print("Sent champions")
                 conn.close()
+            elif command == "SAVE_MATCH": # TODO Saves match history
+                save_match(load)
+                send_client(sock,conn,_,"OK")
             elif command == "QUIT": #TODO quit command
                 pass
 
