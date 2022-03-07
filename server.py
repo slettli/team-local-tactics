@@ -90,7 +90,7 @@ def send_client(sock,conn,_,data):
     data : anything
         Payload / data relevant to the command if any, like champion choices
     """
-    
+
     pickled = pickle.dumps(data) #always pickle
     conn.send(pickled)
     print(f'Sent data to {_}, showing the unpickled format:\n{data}\n')
@@ -117,7 +117,7 @@ def add_to_team(player,champion):
 # Receive input from clients and call appropriate methods
 # Send reply to client
 def server_command(sock,conn,_,command,load):
-    global NUM_PLAYERS, MAX_PLAYERS, P1_TEAM, P2_TEAM
+    global P1_TEAM, P2_TEAM
 
     match (command):
         case 'connect': # New client connects. Check if player slot available, return error or player ID to client
@@ -148,6 +148,8 @@ def server_command(sock,conn,_,command,load):
             send_client(sock,conn,_,play_match())
         case 'SAVE_MATCH': # Send match result to db
             send_database("SAVE_MATCH",load)
+        case 'MATCH_HISTORY': # Get match history from db, return resulting dict to client
+            send_client(sock,conn,_,send_database("MATCH_HISTORY"))
         case 'teamreset': # Reset teams 
             P1_TEAM = []
             P2_TEAM = []

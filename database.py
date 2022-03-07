@@ -2,6 +2,7 @@ from core import Champion
 
 from socket import socket, SOL_SOCKET, SO_REUSEADDR
 import pickle
+import csv
 
 # Functions that fetch and parses list of champions
 def _parse_champ(champ_text: str) -> Champion:
@@ -15,6 +16,16 @@ def from_csv(filename: str) -> dict[str, Champion]:
             champ = _parse_champ(line)
             champions[champ.name] = champ
     return champions
+
+# Reads and returns match history from matches.txt
+def get_match_history():
+    matchHistory = []
+    with open('matches.txt', 'r') as f:
+        for line in f.readlines()[3:]: # Skip first three lines containing info and example match
+            match = num, winner, p1Score, p2Score = line.split(sep=',')
+            match[3] = match[3].strip()
+            matchHistory.append(match)
+    return matchHistory
 
 # Saves match history to matches.txt
 # Format: matchnum, playerwinner, player1score, player2score
@@ -77,6 +88,8 @@ def main():
             elif command == "SAVE_MATCH":
                 save_match(load)
                 send_client(sock,conn,_,"OK")
+            elif command == "MATCH_HISTORY": # Returns a dict of all match history
+                send_client(sock,conn,_,get_match_history())
             elif command == "QUIT": #TODO quit command
                 conn.close()
                 sock.close()

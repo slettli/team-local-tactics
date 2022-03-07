@@ -32,6 +32,7 @@ def print_available_champs(champions: dict[Champion]) -> None:
 
     # Populate the table
     for champion in champions.values():
+        print(champion)
         available_champs.add_row(*champion.str_tuple)
 
     print(available_champs)
@@ -130,6 +131,29 @@ def print_match_summary(match: Match) -> None:
     else:
         print('\nDraw :expressionless:')
 
+# Prints out a table of all matches
+def print_match_history(history):
+    # Create a table containing match history
+    match_history = Table(title='Match history')
+
+    # Add coluns for match no., winner, scores
+    match_history.add_column("Match no.", style="cyan", no_wrap=True, justify="center")
+    match_history.add_column("Winner", no_wrap=True, justify="center")
+    match_history.add_column("P1 Score", style ="red", no_wrap=True, justify="center")
+    match_history.add_column("P2 Score", style ="blue", no_wrap=True, justify="center")
+
+    for match in history:
+        m = str(match[1])
+        if m  == str(0):
+            match[1] = 'Draw'
+        elif m  == str(1):
+            match[1] = 'Player 1'
+        elif m == str(2):
+            match[1] = 'Player 2'   
+        match_history.add_row(*match)
+
+    print(match_history)
+
 # Used for forwarding commands, return reply. Pickles and unpickles
 def send_command(sock,command,data=''):
     """
@@ -212,6 +236,8 @@ def main() -> None:
     Disconnect from server if connected -- NOT IMPLEMENTED
     >>> Play
     Calls other appropriate functions within this script to play game
+    >>> Match history
+    Retreive and show match history. -- NOT IMPLEMENTED 
     >>> Quit
     Tells server to shut down (server tells database to shut down),
     and shuts down client.
@@ -236,6 +262,7 @@ def main() -> None:
         initial_info_table.add_column("Command", style="cyan", no_wrap=True)
         initial_info_table.add_column("Function", no_wrap=True)
         initial_info_table.add_row(*("Play","Starts the game"))
+        initial_info_table.add_row(*("History","Match History"))
         #initial_info_table.add_row(*("Connect","Connect to the server and get Player ID [PLACEHOLDER]"))
         #initial_info_table.add_row(*("Disconnect","Disconnect and wipe team"))
         initial_info_table.add_row(*("Quit","Shut down the server and client"))
@@ -267,6 +294,9 @@ def main() -> None:
                     else:
                         play(sock,playerID)'''
                     play(sock,playerID)
+                case 'history': # Request match history from server > db and show
+                    history = send_command(sock,'MATCH_HISTORY')
+                    print_match_history(history)
                 case ('disconnect'): # Tell server to disconnect and wipe team. TODO make client actually disconnect on network level. Make quit client?
                     send_command(sock,'disconnect',playerID)
                     print('Disconnected. Thanks for playing.')
