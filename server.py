@@ -13,9 +13,16 @@ P2_CONNECTED = False
 P1_TEAM = [] # Player 1's team
 P2_TEAM = [] # Player 2's team
 
-# TODO Handle playing the match using core, return result
+# Handle playing the match, return resulting match object
 def play_match():
-    pass
+    # Match - Should be moved to server.py, with server only returning results.
+    champs = send_database("GET_CHAMPS")
+    match = Match(
+        Team([champs[name] for name in P1_TEAM]),
+        Team([champs[name] for name in P2_TEAM])
+    )
+    match.play()
+    return match
 
 # Send stuff to database. Request champions, send match result
 def send_database(command,data=''):
@@ -76,8 +83,8 @@ def server_command(sock,conn,_,command,load):
             print('Adding to team requested')
             add_to_team(load[0],load[1])
             send_client(sock,conn,_,"OK") # Use 200 instead?
-        case 'play': # Play match, return result
-            pass
+        case 'PLAY': # Play match, return result to client
+            send_client(sock,conn,_,play_match())
         case 'SAVE_MATCH': # Send match result to db
             send_database("SAVE_MATCH",load)
         case 'teamreset': # Reset teams 

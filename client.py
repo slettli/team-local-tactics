@@ -139,14 +139,7 @@ def play(sock,player_id):
     print('\n')
 
     # Fetch (hopefully) finished teams to run match
-    teams = send_command(sock,'teams')
-    # Match - Should be moved to server.py, with server only returning results.
-    match = Match(
-        Team([champions[name] for name in teams[0]]),
-        Team([champions[name] for name in teams[1]])
-    )
-    match.play()
-
+    match = send_command(sock,'PLAY') # Initial call to play match when using one client only, will be changed
     # Print a summary
     print_match_summary(match)
     send_command(sock, "SAVE_MATCH", match.score) # Send match result to server to store in DB 
