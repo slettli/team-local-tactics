@@ -9,3 +9,4 @@ Match number , Winner(0=draw,1=player1,2=player2) , Player 1 score , Player 2 sc
 6,1,5,1
 7,1,4,2
 8,2,1,5
+9,2,2,4

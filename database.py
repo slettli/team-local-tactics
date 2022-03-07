@@ -40,8 +40,10 @@ def save_match(result):
             winner = "0"
         f.write(f"\n{matchnum},{winner},{p1},{p2}") # Write result
 
-# Pickle and send whatever to client or database. Yeah, bad name for the function.
-def send_client(sock,conn,_,load):
+def send_client(sock,conn,_,load): 
+    """
+    Pickle and send data back to connected client (usually server)
+    """
     pickled = pickle.dumps(load) #always pickle
     conn.send(pickled)
     print(f'Sent data to {_}, showing the unpickled format:\n{load}\n')

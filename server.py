@@ -13,8 +13,13 @@ P2_CONNECTED = False
 P1_TEAM = [] # Player 1's team
 P2_TEAM = [] # Player 2's team
 
-# Handle playing the match, return resulting match object
 def play_match():
+    """
+    Generates a match object and "plays" the match.
+    Sends result to database.
+    Returns match object.
+    """
+
     # Match - Should be moved to server.py, with server only returning results.
     champs = send_database("GET_CHAMPS")
     match = Match(
@@ -27,6 +32,20 @@ def play_match():
 
 # Send stuff to database. Request champions, send match result
 def send_database(command,data=''):
+    """
+    Establishes TCP connection to database server.
+    Forwards commands and/or data to database in pickled form.
+        Using send_command()
+    Returns unpickled reply 
+
+    Parameters
+    ----------
+    command : str
+        Command telling server what to do with sent data
+    data : str
+        Payload / data relevant to the command if any, like champion choices
+    """
+
     with socket() as sock:
         DB_ADDRESS = ("localhost", 5556)
         sock.connect(DB_ADDRESS)
@@ -37,17 +56,58 @@ def send_database(command,data=''):
 
 # Used to send command when server acts as client, like with database
 def send_command(sock,command,data=''):
+    """
+    Sends commands and data (pickled) to a destination when server acts as a client.
+    Returns unpickled reply.
+
+    Parameters
+    ----------
+    sock : socket
+        Currently used socket containing connection to server 
+    command : str
+        Command telling server what to do with sent data
+    data : anything
+        Payload / data relevant to the command if any, like champion choices
+    """
+
     sock.send(pickle.dumps((command,data))) # Always pickle
     return pickle.loads(sock.recv(1024)) # Return reply
 
 # Pickle and send whatever to client or database. Yeah, bad name for the function.
-def send_client(sock,conn,_,load):
-    pickled = pickle.dumps(load) #always pickle
+def send_client(sock,conn,_,data):
+    """
+    Sends commands and data (pickled) to a player client.
+    Returns unpickled reply.
+
+    Parameters
+    ----------
+    sock : socket
+        Currently used socket containing connection to server 
+    conn : tcp connection
+        Established TCP connection with client
+    _ : tuple 
+        Address of client
+    data : anything
+        Payload / data relevant to the command if any, like champion choices
+    """
+    
+    pickled = pickle.dumps(data) #always pickle
     conn.send(pickled)
-    print(f'Sent data to {_}, showing the unpickled format:\n{load}\n')
+    print(f'Sent data to {_}, showing the unpickled format:\n{data}\n')
 
 # Add selected champion to a player's team
 def add_to_team(player,champion):
+    """
+    Adds player champion pick to list of team.
+
+    Parameters
+    ----------
+    player : str
+        Player ID
+    champion : str
+        Champion name
+    """
+
     if player == 'Player 1':
         P1_TEAM.append(champion)
     else:

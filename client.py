@@ -9,8 +9,16 @@ import pickle
 
 from core import Champion, Match, Shape, Team
 
-# Can stay in client. Formats and prints champion list
 def print_available_champs(champions: dict[Champion]) -> None:
+    """
+    Prints available champions in a nice table.
+    Takes input in the form of a Champion dict, requested from server by the client.
+
+    Parameters
+    ----------
+    champions : dict
+        A dict containing champions available in the game, and corresponding stats.
+    """
 
     # Create a table containing available champions
     available_champs = Table(title='Available champions')
@@ -28,14 +36,32 @@ def print_available_champs(champions: dict[Champion]) -> None:
 
     print(available_champs)
 
-# Checks if champion is available, forwards choice if accepted to server.
-# Should be moved server side.
 def input_champion(sock,
                    prompt: str,
                    color: str,
                    champions: dict[Champion],
                    player1: list[str],
                    player2: list[str]) -> None:
+    """
+    Takes input from player when selecting champions and forwards to server.
+    Parses input and prints an error message if the champion is unavailable or already taken.   
+    It then calls send_command() to forward the choice to the server. 
+
+    Parameters
+    ----------
+    sock : socket
+        Currently used socket containing connection to server
+    prompt : str
+        What to prompt the player with
+    color : str
+        Which player to ask ( blue or red)
+    champions : dict
+        Dict with champions
+    player1 : list
+        Team for player 1
+    player2 : list
+        Team for player 2
+    """
 
     # Prompt the player to choose a champion and provide the reason why
     # certain champion cannot be selected
@@ -53,6 +79,15 @@ def input_champion(sock,
 
 
 def print_match_summary(match: Match) -> None:
+    """
+    Takes a Match object as input, extracts relevant info,
+    and finally prints a nice stylized representation of the results.
+
+    Parameters
+    ----------
+    match: Match object
+        A match object of Match class, containing all info about the played match
+    """
 
     EMOJI = {
         Shape.ROCK: ':raised_fist-emoji:',
@@ -97,32 +132,49 @@ def print_match_summary(match: Match) -> None:
 
 # Used for forwarding commands, return reply. Pickles and unpickles
 def send_command(sock,command,data=''):
+    """
+    Forwards commands and/or data to destination in pickled form.
+    Returns unpickled reply.
+
+    Parameters
+    ----------
+    sock : socket
+        Currently used socket containing connection to server 
+    command : str
+        Command telling server what to do with sent data
+    data : anything
+        Payload / data relevant to the command if any, like champion choices
+    """
+
     sock.send(pickle.dumps((command,data))) # Always pickle
 
     return pickle.loads(sock.recv(1024)) # Return reply
-
-# Takes server command from main() and forwards to appropriate method
-def server_command(sock,command):
-    match (command):
-        case 'champions':
-            return send_command(sock,command)
-        case 'teams':
-            return send_command(sock,command)
-        case 'quit':
-            send_command(sock, command)
         
-# Fetch list of champions: db > server > client 
-# More or less team-local-tactics.py, kept here while gradually slicing up into separate methods and server.py
 def play(sock,player_id):
+    """
+    Performs one loop/round of the game from the client side:
+        1. Retrieves champions from server
+            db > server > client
+        2. Prints and lets players pick champions
+        3. Forward chosen teams to server
+        4. Tell server to start match
+        5. Format and print match results when returned from server
+        6. Tell server to reset teams for the next round.
+    
+    Parameters
+    ----------
+    sock : socket
+        Currently used socket containing connection to server 
+    player_id : int
+        Number representing whether this client is Player 1 or 2. Currently not used.
+    """
+
     print("Asking server for champions...")
-    champions = server_command(sock,"champions")
+    champions = send_command(sock,"champions")
     print(f"Received reply: {champions}")
 
     print_available_champs(champions)
     print('\n')
-
-    # TODO make below stuff networked. 
-    # TODO move parsing to server
 
     teams = send_command(sock,'teams') # Initial team fetch
     print(teams)
@@ -138,7 +190,7 @@ def play(sock,player_id):
 
     print('\n')
 
-    # Fetch (hopefully) finished teams to run match
+    # Tell server to play match, retrieve resulting match object
     match = send_command(sock,'PLAY') # Initial call to play match when using one client only, will be changed
     # Print a summary
     print_match_summary(match)
@@ -146,6 +198,25 @@ def play(sock,player_id):
 
 # Handles initial connection, calls other methods based on player input
 def main() -> None:
+    """
+    Client loop that performs the client side of the game:
+        1. Establishes a socket and connects to server over TCP
+        2. Presents a menu of commands
+        3. Acts in requested manner from there    
+
+    Example
+    -------
+    >>> Connect
+    Attempt to establish TCP connection with server -- NOT IMPLEMENTED
+    >>> Disconnect
+    Disconnect from server if connected -- NOT IMPLEMENTED
+    >>> Play
+    Calls other appropriate functions within this script to play game
+    >>> Quit
+    Tells server to shut down (server tells database to shut down),
+    and shuts down client.
+    """
+
     playerID = ''
     # Initialize TCP connection to server
     with socket() as sock:

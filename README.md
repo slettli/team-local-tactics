@@ -41,6 +41,7 @@ This readme will probably change as I add more features and figure out the inner
 * Server and client can communicate
 * Server handles player teams and sends to client
 * Server sends champion list to client
+* Server handles playing out match, returns match object to client
 #### Client
 * Client offers command menu to interact with server
   * Play, reset teams, shut down etc.
@@ -48,10 +49,9 @@ This readme will probably change as I add more features and figure out the inner
 * Game can be 'played'
 #### Datbase
 * Database transmits champions to Server through sockets
-* Database stores match history (client>server>database)
+* Database stores match history (server>database)
 
 ### Missing features
 * Separate player clients doesn't work yet
-* Match logic is still performed client-side
 * Server does not generate formatted output for clients (should it?)
 * No form of concurrency, so server will have a hard time communicating with two clients
