@@ -17,25 +17,15 @@ P2_TEAM = [] # Player 2's team
 def play_match():
     pass
 
-# Helper function for getting champions specifically. Returns champions
-def load_some_champs():
+# Send stuff to database. Request champions, send match result
+def send_database(command,data=''):
     with socket() as sock:
         DB_ADDRESS = ("localhost", 5556)
         sock.connect(DB_ADDRESS)
         print(f'Connected to server {sock.getpeername()}')
-        champs= send_command(sock,"GET_CHAMPS")
+        result = send_command(sock,command,data)
 
-    return champs # Return reply, HOPEFULLY CHAMPS
-
-# Send match result to database.py
-def save_match(result):
-    with socket() as sock:
-        DB_ADDRESS = ("localhost", 5556)
-        sock.connect(DB_ADDRESS)
-        print(f'Connected to server {sock.getpeername()}')
-        champs= send_command(sock,"SAVE_MATCH",result)
-
-    return champs # Return reply, HOPEFULLY CHAMPS
+    return result # Return reply, HOPEFULLY CHAMPS
 
 # Used to send command when server acts as client, like with database
 def send_command(sock,command,data=''):
@@ -76,9 +66,9 @@ def server_command(sock,conn,_,command,load):
             elif load == "Player 2":
                 P2_TEAM = [] # Player 2's team
                 print(f"Disconnect request received from {_}, wiping {load}'s team.")
-        case 'champions': # Get dict of champions and encode with pickle
+        case 'champions': # Get champions from db and send to client
             print('Champion list requested')
-            send_client(sock,conn,_,load_some_champs())
+            send_client(sock,conn,_,send_database("GET_CHAMPS"))
         case 'teams': # Get list of current teams - player1 and player2 arrays
             print('Team lists requested')
             send_client(sock,conn,_,(P1_TEAM,P2_TEAM)) # Return pickled tuple of player teams
@@ -88,8 +78,8 @@ def server_command(sock,conn,_,command,load):
             send_client(sock,conn,_,"OK") # Use 200 instead?
         case 'play': # Play match, return result
             pass
-        case 'SAVE_MATCH':
-            save_match(load)
+        case 'SAVE_MATCH': # Send match result to db
+            send_database("SAVE_MATCH",load)
         case 'teamreset': # Reset teams 
             P1_TEAM = []
             P2_TEAM = []
@@ -121,6 +111,8 @@ def main():
             # Quit and shut down server if requested, else handle command
             if command == 'quit': 
                 print('Shutdown request received.')
+                send_database("QUIT") # Tell database to shut down as well
+                print('Database shut down.')
                 send_client(sock,conn,_,"Bye") # Change to appropriate code
                 conn.close()
                 print('Connection closed. Shutting down.')

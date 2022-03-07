@@ -26,7 +26,8 @@ def save_match(result):
             pass
         last_line = line
         matchnum = int(last_line[0]) + 1 # Append to number of matches
-
+    
+    # Calculate and save match result (calc should maybe be done in server)
     with open('matches.txt', 'a') as f:
         # Find last line to get newest match num
         p1 = result[0]
@@ -45,8 +46,8 @@ def send_client(sock,conn,_,load):
     conn.send(pickled)
     print(f'Sent data to {_}, showing the unpickled format:\n{load}\n')
 
-# Listen to and return champions in pickled format when requested
-def load_some_champs():
+# Listen for commands and perform appropriate actions
+def main():
     with socket() as sock:
         sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         sock.bind(('localhost', 5556))
@@ -71,15 +72,13 @@ def load_some_champs():
                 send_client(sock,conn,_,champions)                
                 print("Sent champions")
                 conn.close()
-            elif command == "SAVE_MATCH": # TODO Saves match history
+            elif command == "SAVE_MATCH":
                 save_match(load)
                 send_client(sock,conn,_,"OK")
             elif command == "QUIT": #TODO quit command
-                pass
-
-def main():
-    print("Database loading")
-    load_some_champs()
+                conn.close()
+                sock.close()
+                break
 
 if __name__ == '__main__':
     main()
