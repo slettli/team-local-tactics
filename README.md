@@ -48,6 +48,7 @@ This readme will probably change as I add more features and figure out the inner
 * Game can be 'played'
 #### Datbase
 * Database transmits champions to Server through sockets
+* Database stores match history (client>server>database)
 
 ### Missing features
 * Separate player clients doesn't work yet
