@@ -179,7 +179,7 @@ def main():
                     try:
                         received = pickle.loads(conn.recv(1024))
                     except:
-                        print(f"Lost connection with {_}\n")
+                        print(f"Lost connection to {_}\n") # Break loop and listen for new connections
                         break
                     print(f'Received request from {_}:\n{received}\n')
                     command = received[0]
@@ -191,9 +191,8 @@ def main():
                         send_database("QUIT") # Tell database to shut down as well
                         print('Database shut down.')
                         send_client(conn,_,"Bye") # Change to appropriate code
-                        conn.close()
                         print('Connection closed. Shutting down.')
-                        break
+                        return
                     else:
                         server_command(sock,conn,_,command,load)
 

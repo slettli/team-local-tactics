@@ -69,31 +69,37 @@ def main():
         print(f'Listening at {sock.getsockname()}\n')
 
         while True: # Network loop
+            print(f'Listening at {sock.getsockname()}\n')
             conn, _ = sock.accept()
             print(f'Peer {_} connected\n')
-            print(f'Listening at {sock.getsockname()}\n')
-            # Get command and forward to server_command
-            # Data will always be sent as an array consisting of command,data
-            received = pickle.loads(conn.recv(1024))
-            print(f'Received request from {_}:\n{received}\n')
-            command = received[0]
-            load = received[1]
-            print(command)
-            # Quit and shut down server if requested, else handle command
-            if command == "GET_CHAMPS":
-                champions = from_csv('some_champs.txt')
-                send_client(sock,conn,_,champions)                
-                print("Sent champions")
-                conn.close()
-            elif command == "SAVE_MATCH":
-                save_match(load)
-                send_client(sock,conn,_,"OK")
-            elif command == "MATCH_HISTORY": # Returns a dict of all match history
-                send_client(sock,conn,_,get_match_history())
-            elif command == "QUIT": #TODO quit command
-                conn.close()
-                sock.close()
-                break
+            with conn:
+                # Get command and forward to server_command
+                # Data will always be sent as an array consisting of command,data
+                try:
+                    received = pickle.loads(conn.recv(1024))
+                except:
+                    print(f"Lost connection to {_}\n") # Break loop and listen for new connections
+                    break
+
+                print(f'Received request from {_}:\n{received}\n')
+                command = received[0]
+                load = received[1]
+                print(command)
+                # Quit and shut down server if requested, else handle command
+                if command == "GET_CHAMPS":
+                    champions = from_csv('some_champs.txt')
+                    send_client(sock,conn,_,champions)                
+                    print("Sent champions")
+                    conn.close()
+                elif command == "SAVE_MATCH":
+                    save_match(load)
+                    send_client(sock,conn,_,"OK")
+                elif command == "MATCH_HISTORY": # Returns a dict of all match history
+                    send_client(sock,conn,_,get_match_history())
+                elif command == "QUIT": #TODO quit command
+                    conn.close()
+                    sock.close()
+                    break
 
 if __name__ == '__main__':
     main()

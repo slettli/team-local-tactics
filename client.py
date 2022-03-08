@@ -175,7 +175,7 @@ def send_command(sock,command,data=''):
         return pickle.loads(sock.recv(1024)) # Return reply
     except:
         return
-            
+
 def play(sock,player_id):
     """
     Performs one loop/round of the game from the client side:
@@ -302,11 +302,11 @@ def main() -> None:
                 case ('disconnect'): # Tell server to disconnect and wipe team. TODO make client actually disconnect on network level. Make quit client?
                     send_command(sock,'disconnect',playerID)
                     print('Disconnected. Thanks for playing.')
-                    break
+                    return
                 case ('quit'): # Tell server to shut down, quit client. Make shut down server and quit client separate?
                     send_command(sock,'quit')
                     print('Server shutting down. Thanks for playing.')
-                    break
+                    return
 
         
 if __name__ == '__main__':
