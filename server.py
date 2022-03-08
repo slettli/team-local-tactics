@@ -1,3 +1,4 @@
+from logging import exception
 from rich import print
 from rich.prompt import Prompt
 from rich.table import Table
@@ -71,18 +72,19 @@ def send_command(sock,command,data=''):
     """
 
     sock.send(pickle.dumps((command,data))) # Always pickle
-    return pickle.loads(sock.recv(1024)) # Return reply
+    try:
+        return pickle.loads(sock.recv(1024)) # Return reply
+    except:
+        return
 
 # Pickle and send whatever to client or database. Yeah, bad name for the function.
-def send_client(sock,conn,_,data):
+def send_client(conn,_,data):
     """
     Sends commands and data (pickled) to a player client.
     Returns unpickled reply.
 
     Parameters
     ----------
-    sock : socket
-        Currently used socket containing connection to server 
     conn : tcp connection
         Established TCP connection with client
     _ : tuple 
@@ -122,11 +124,11 @@ def server_command(sock,conn,_,command,load):
     match (command):
         case 'connect': # New client connects. Check if player slot available, return error or player ID to client
             if P1_CONNECTED == False:
-                send_client(sock,conn,_,"Player 1")
+                send_client(conn,_,"Player 1")
             elif P2_CONNECTED == False:
-                send_client(sock,conn,_,"Player 2")
+                send_client(conn,_,"Player 2")
             else:
-                send_client(sock,conn,_,"FULL") # Tell client server is full
+                send_client(conn,_,"FULL") # Tell client server is full
         case 'disconnect': # Mark player slot as open, wipe corresponding player's team
             if load == "Player 1":
                 P1_TEAM = []
@@ -136,24 +138,24 @@ def server_command(sock,conn,_,command,load):
                 print(f"Disconnect request received from {_}, wiping {load}'s team.")
         case 'champions': # Get champions from db and send to client
             print('Champion list requested')
-            send_client(sock,conn,_,send_database("GET_CHAMPS"))
+            send_client(conn,_,send_database("GET_CHAMPS"))
         case 'teams': # Get list of current teams - player1 and player2 arrays
             print('Team lists requested')
-            send_client(sock,conn,_,(P1_TEAM,P2_TEAM)) # Return pickled tuple of player teams
+            send_client(conn,_,(P1_TEAM,P2_TEAM)) # Return pickled tuple of player teams
         case 'select':
             print('Adding to team requested')
             add_to_team(load[0],load[1])
-            send_client(sock,conn,_,"OK") # Use 200 instead?
+            send_client(conn,_,"OK") # Use 200 instead?
         case 'PLAY': # Play match, return result to client
-            send_client(sock,conn,_,play_match())
+            send_client(conn,_,play_match())
         case 'SAVE_MATCH': # Send match result to db
             send_database("SAVE_MATCH",load)
         case 'MATCH_HISTORY': # Get match history from db, return resulting dict to client
-            send_client(sock,conn,_,send_database("MATCH_HISTORY"))
+            send_client(conn,_,send_database("MATCH_HISTORY"))
         case 'teamreset': # Reset teams 
             P1_TEAM = []
             P2_TEAM = []
-            send_client(sock,conn,_,"OK") # Use 200 instead?
+            send_client(conn,_,"OK") # Use 200 instead?
         case 'playerreset': # Will reset connected players
             pass
 
@@ -166,29 +168,34 @@ def main():
         sock.listen() # Should this be inside the loop?
         print('Welcome to the TNT super early access indiegogo crowdfund server.')
         print(f'Listening at {sock.getsockname()}\n')
-        conn, _ = sock.accept()
+        
+        while True: # Connection loop with client. TODO spin this off into separate thread for each conn
+            conn, _ = sock.accept()
+            with conn:
+                print(f'Peer {_} connected\n')
+                while True: # Network loop
+                    # Get command and forward to server_command
+                    # Data will always be sent as an array consisting of command,data
+                    try:
+                        received = pickle.loads(conn.recv(1024))
+                    except:
+                        print(f"Lost connection with {_}\n")
+                        break
+                    print(f'Received request from {_}:\n{received}\n')
+                    command = received[0]
+                    load = received[1]
 
-        while True: # Network loop
-            print(f'Peer {_} connected\n')
-            print(f'Listening at {sock.getsockname()}\n')
-            # Get command and forward to server_command
-            # Data will always be sent as an array consisting of command,data
-            received = pickle.loads(conn.recv(1024))
-            print(f'Received request from {_}:\n{received}\n')
-            command = received[0]
-            load = received[1]
-
-            # Quit and shut down server if requested, else handle command
-            if command == 'quit': 
-                print('Shutdown request received.')
-                send_database("QUIT") # Tell database to shut down as well
-                print('Database shut down.')
-                send_client(sock,conn,_,"Bye") # Change to appropriate code
-                conn.close()
-                print('Connection closed. Shutting down.')
-                break
-            else:
-                server_command(sock,conn,_,command,load)
+                    # Quit and shut down server if requested, else handle command
+                    if command == 'quit': 
+                        print('Shutdown request received.')
+                        send_database("QUIT") # Tell database to shut down as well
+                        print('Database shut down.')
+                        send_client(conn,_,"Bye") # Change to appropriate code
+                        conn.close()
+                        print('Connection closed. Shutting down.')
+                        break
+                    else:
+                        server_command(sock,conn,_,command,load)
 
 if __name__ == '__main__':
     main()

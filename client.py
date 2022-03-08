@@ -171,9 +171,11 @@ def send_command(sock,command,data=''):
     """
 
     sock.send(pickle.dumps((command,data))) # Always pickle
-
-    return pickle.loads(sock.recv(1024)) # Return reply
-        
+    try:
+        return pickle.loads(sock.recv(1024)) # Return reply
+    except:
+        return
+            
 def play(sock,player_id):
     """
     Performs one loop/round of the game from the client side:
@@ -262,7 +264,7 @@ def main() -> None:
         initial_info_table.add_column("Command", style="cyan", no_wrap=True)
         initial_info_table.add_column("Function", no_wrap=True)
         initial_info_table.add_row(*("Play","Starts the game"))
-        initial_info_table.add_row(*("History","Match History"))
+        initial_info_table.add_row(*("History","Show match history"))
         #initial_info_table.add_row(*("Connect","Connect to the server and get Player ID [PLACEHOLDER]"))
         #initial_info_table.add_row(*("Disconnect","Disconnect and wipe team"))
         initial_info_table.add_row(*("Quit","Shut down the server and client"))
