@@ -46,6 +46,7 @@ This readme will probably change as I add more features and figure out the inner
 * Client offers command menu to interact with server
   * Play, reset teams, shut down etc.
 * Client takes champion selection input and forwards to server
+* Client can request and print match history
 * Game can be 'played'
 #### Datbase
 * Database transmits champions to Server through sockets
