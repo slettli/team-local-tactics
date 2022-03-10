@@ -9,6 +9,8 @@ import pickle
 
 from core import Champion, Match, Shape, Team
 
+PLAYER_ID = ""
+
 def print_available_champs(champions: dict[Champion]) -> None:
     """
     Prints available champions in a nice table.
@@ -75,9 +77,8 @@ def input_champion(sock,
             case name if name in player2:
                 print(f'{name} is in the enemy team. Try again.')
             case _: # send champion selection to server in form of tuple playername, champ name
-                a = send_command(sock,'select',(prompt,name))
+                send_command(sock,'select',(PLAYER_ID,name))
                 break
-
 
 def print_match_summary(match: Match) -> None:
     """
@@ -174,9 +175,9 @@ def send_command(sock,command,data=''):
     try:
         return pickle.loads(sock.recv(1024)) # Return reply
     except:
-        return
+        return ""
 
-def play(sock,player_id):
+def play(sock):
     """
     Performs one loop/round of the game from the client side:
         1. Retrieves champions from server
@@ -194,33 +195,52 @@ def play(sock,player_id):
     player_id : int
         Number representing whether this client is Player 1 or 2. Currently not used.
     """
+    global PLAYER_ID
 
     print("Asking server for champions...")
     champions = send_command(sock,"champions")
-    print(f"Received reply: {champions}")
-
     print_available_champs(champions)
     print('\n')
-
-    teams = send_command(sock,'teams') # Initial team fetch
-    print(teams)
-
-    # Champion selection. Ask server for teams before each player picks again.
-    for _ in range(2): 
+    # CHAMP SELECT WORKS IF YOU CTRL C OUT OF SPAMMING HUHHH
+    # Champion selection. Ask server for teams before each player picks again.        
+    for i in range(3):
+        print("Waiting for turn to pick..)")
+        turn = ''
+        while True: # Wait for turn
+            try: 
+                sock.send(pickle.dumps(('select',''))) # Ask for turn
+                turn = pickle.loads(sock.recv(1024)) # Wait for our turn again
+                if turn == PLAYER_ID:
+                    break
+            except:
+                continue
+        # Then pick as normal depending on which player the client is
         teams = send_command(sock,'teams')
-        print(teams[0])
-        print(teams[1])
-        input_champion(sock,'Player 1', 'red', champions, teams[0], teams[1])
-        teams = send_command(sock,'teams')
-        input_champion(sock,'Player 2', 'blue', champions, teams[1], teams[0])
+        print(f"Player 1 team: {teams[0]}")
+        print(f"Player 2 team: {teams[1]}\n")
+        if PLAYER_ID == "P1":
+            input_champion(sock,'Player 1', 'red', champions, teams[0], teams[1])
+            print("sent champ p1")
+        elif PLAYER_ID == "P2":
+            input_champion(sock,'Player 2', 'blue', champions, teams[1], teams[0])
+            print("sent champ p2")
+
+    print("Waiting for results") # Then wait for server to send match results
+    while True:
+        try:
+            match = pickle.loads(sock.recv(1024)) # Wait for our turn again
+            if match != "":
+                break
+        except:
+            continue
 
     print('\n')
-
+    print("got match")
     # Tell server to play match, retrieve resulting match object
-    match = send_command(sock,'PLAY') # Initial call to play match when using one client only, will be changed
+    #match = send_command(sock,'PLAY') # Initial call to play match when using one client only, will be changed
     # Print a summary
     print_match_summary(match)
-    send_command(sock,"teamreset") # Tell server to wipe teams so you can play again without restarting server. This will be moved to server later
+    #send_command(sock,"teamreset") # Tell server to wipe teams so you can play again without restarting server. This will be moved to server later
 
 # Handles initial connection, calls other methods based on player input
 def main() -> None:
@@ -244,6 +264,7 @@ def main() -> None:
     Tells server to shut down (server tells database to shut down),
     and shuts down client.
     """
+    global PLAYER_ID
 
     playerID = ''
     # Initialize TCP connection to server
@@ -251,9 +272,15 @@ def main() -> None:
         # TODO make client not crash if server not found
         # Connect to server
         SERVER_ADDRESS = ("localhost", 5555)
-        sock.connect(SERVER_ADDRESS)
         print(f'Client address {sock.getsockname()}')
+        sock.connect(SERVER_ADDRESS)
         print(f'Connected to server {sock.getpeername()}')
+        # Receive Player ID
+        PLAYER_ID = pickle.loads(sock.recv(1024))
+        print(f"Received Player ID {PLAYER_ID}")
+        if PLAYER_ID == "FULL":
+            print("Server responded saying no player slots left. Aborting.")
+            return
 
         # Welcome message and table of commands
         print('\n'
@@ -295,7 +322,7 @@ def main() -> None:
                         print("Error - Not assigned Player ID.")
                     else:
                         play(sock,playerID)'''
-                    play(sock,playerID)
+                    play(sock)
                 case 'history': # Request match history from server > db and show
                     history = send_command(sock,'MATCH_HISTORY')
                     print_match_history(history)
