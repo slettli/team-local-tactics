@@ -1,6 +1,7 @@
 # team-online-tactics
 A game for the mandatory assignment in INF142 Spring 2022.
 
+<<<<<<< HEAD
 Based upon the now antiquated team-local-tactics, but converted to work over networks. The basic concept is suspiciously alike a game with a similar name, but this is a simpler rock-paper-scissors-esque implementation that plays in the terminal. 
 
 ## Prerequisites
@@ -70,3 +71,10 @@ If a client disconnects or crashes, the server has to be restarted. I didn't imp
 #### Datbase
 * Database transmits champions to Server through sockets
 * Database stores match history (server>database)
+=======
+**See branch [feature-online](https://github.com/slettli/team-local-tactics/tree/feature-online) for progress on turning this into *Team Online Tactics***
+
+Group 99:
+  - Viljar Slettli 
+      - yep, just me :)
+>>>>>>> f54f906c664deb65cea1e9b99bf15d5c86fc9d1f
