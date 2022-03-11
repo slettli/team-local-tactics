@@ -34,7 +34,6 @@ def print_available_champs(champions: dict[Champion]) -> None:
 
     # Populate the table
     for champion in champions.values():
-        print(champion)
         available_champs.add_row(*champion.str_tuple)
 
     print(available_champs)
@@ -132,8 +131,15 @@ def print_match_summary(match: Match) -> None:
     else:
         print('\nDraw :expressionless:')
 
-# Prints out a table of all matches
 def print_match_history(history):
+    """
+    Format and print a nice table of all previous matches.
+
+    Parameters
+    ----------
+    history : Array 
+        Array containing arrays of matches
+    """
     # Create a table containing match history
     match_history = Table(title='Match history')
 
@@ -155,11 +161,10 @@ def print_match_history(history):
 
     print(match_history)
 
-# Used for forwarding commands, return reply. Pickles and unpickles
 def send_command(sock,command,data=''):
     """
     Forwards commands and/or data to destination in pickled form.
-    Returns unpickled reply.
+    Returns unpickled reply if any, otherwise return empty string. 
 
     Parameters
     ----------
@@ -168,32 +173,29 @@ def send_command(sock,command,data=''):
     command : str
         Command telling server what to do with sent data
     data : anything
-        Payload / data relevant to the command if any, like champion choices
+        Payload / data if any, like champion choices
     """
 
     sock.send(pickle.dumps((command,data))) # Always pickle
-    try:
+    try: # Return data if any
         return pickle.loads(sock.recv(1024)) # Return reply
-    except:
-        return ""
+    except: # Return empty string so functions expecting a return don't throw a fit
+        return "" 
 
 def play(sock):
     """
     Performs one loop/round of the game from the client side:
-        1. Retrieves champions from server
+    1. Retreive champions from server
             db > server > client
-        2. Prints and lets players pick champions
-        3. Forward chosen teams to server
-        4. Tell server to start match
-        5. Format and print match results when returned from server
-        6. Tell server to reset teams for the next round.
+    2. Prints and lets player pick champions
+    3. Forward chosen champions to server
+    4. Wait for match results from server
+    5. Format and print match results when returned from server
     
     Parameters
     ----------
     sock : socket
         Currently used socket containing connection to server 
-    player_id : int
-        Number representing whether this client is Player 1 or 2. Currently not used.
     """
     global PLAYER_ID
 
@@ -201,7 +203,8 @@ def play(sock):
     champions = send_command(sock,"champions")
     print_available_champs(champions)
     print('\n')
-    # CHAMP SELECT WORKS IF YOU CTRL C OUT OF SPAMMING HUHHH
+    # Player 2 has to ctrl+c while waiting to pick their third option.
+    # It's left hanging by the server for some reason.
     # Champion selection. Ask server for teams before each player picks again.        
     for i in range(3):
         print("Waiting for turn to pick..)")
@@ -226,13 +229,14 @@ def play(sock):
             print("sent champ p2")
 
     print("Waiting for results") # Then wait for server to send match results
-    while True:
+    while True: # Loop until server results are received
         try:
             match = pickle.loads(sock.recv(1024)) # Wait for our turn again
             if match != "":
                 break
         except:
             continue
+
 
     print('\n')
     print("got match")
@@ -246,20 +250,17 @@ def play(sock):
 def main() -> None:
     """
     Client loop that performs the client side of the game:
-        1. Establishes a socket and connects to server over TCP
-        2. Presents a menu of commands
-        3. Acts in requested manner from there    
+    1. Establishes a socket and connects to server over TCP
+    2. Presents a menu of commands
+    3. Acts in requested manner from there   
+    4. Quits if requested 
 
     Example
     -------
-    >>> Connect
-    Attempt to establish TCP connection with server -- NOT IMPLEMENTED
-    >>> Disconnect
-    Disconnect from server if connected -- NOT IMPLEMENTED
     >>> Play
-    Calls other appropriate functions within this script to play game
-    >>> Match history
-    Retreive and show match history. -- NOT IMPLEMENTED 
+    Start gameplay loop
+    >>> History
+    Retreive and show match history.
     >>> Quit
     Tells server to shut down (server tells database to shut down),
     and shuts down client.
@@ -292,10 +293,7 @@ def main() -> None:
         initial_info_table.add_column("Function", no_wrap=True)
         initial_info_table.add_row(*("Play","Starts the game"))
         initial_info_table.add_row(*("History","Show match history"))
-        #initial_info_table.add_row(*("Connect","Connect to the server and get Player ID [PLACEHOLDER]"))
-        #initial_info_table.add_row(*("Disconnect","Disconnect and wipe team"))
         initial_info_table.add_row(*("Quit","Shut down the server and client"))
-        #initial_info_table.add_row(*("Debug","Show (very) secret debug commands [PLACEHOLDER]"))
 
         # Command loop     
         while True: 
@@ -334,7 +332,6 @@ def main() -> None:
                     send_command(sock,'quit')
                     print('Server shutting down. Thanks for playing.')
                     return
-
-        
+    
 if __name__ == '__main__':
     main()

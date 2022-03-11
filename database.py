@@ -4,12 +4,27 @@ from socket import socket, SOL_SOCKET, SO_REUSEADDR
 import pickle
 import csv
 
-# Functions that fetch and parses list of champions
 def _parse_champ(champ_text: str) -> Champion:
+    """
+    Parses input string and generates Champion. Returns Champion object.
+
+    Parameters
+    ----------
+    champ_text : str
+        String containing champion info 
+    """
     name, rock, paper, scissors = champ_text.split(sep=',')
     return Champion(name, float(rock), float(paper), float(scissors))
 
 def from_csv(filename: str) -> dict[str, Champion]:
+    """
+    Parses champions from some_champs.txt and returns a dict of Champions and their data.
+
+    Parameters
+    ----------
+    filename : str
+        Name of file to read champions from
+    """
     champions = {}
     with open(filename, 'r') as f:
         for line in f.readlines():
@@ -17,8 +32,11 @@ def from_csv(filename: str) -> dict[str, Champion]:
             champions[champ.name] = champ
     return champions
 
-# Reads and returns match history from matches.txt
+
 def get_match_history():
+    """
+    Reads and returns match history from matches.txt. Returns an array of arrays of all matches.
+    """
     matchHistory = []
     with open('matches.txt', 'r') as f:
         for line in f.readlines()[3:]: # Skip first three lines containing info and example match
@@ -27,9 +45,16 @@ def get_match_history():
             matchHistory.append(match)
     return matchHistory
 
-# Saves match history to matches.txt
-# Format: matchnum, playerwinner, player1score, player2score
 def save_match(result):
+    """
+    Saves passed match result to matches.txt.
+    Format: matchnum, playerwinner, player1score, player2score
+
+    Parameters
+    ----------
+    result : tuple
+        Player 1 and 2 from match
+    """
     matchnum = 0
     # Get current match num
     with open ('matches.txt') as f:
@@ -53,14 +78,31 @@ def save_match(result):
 
 def send_client(sock,conn,_,load): 
     """
-    Pickle and send data back to connected client (usually server)
+    Pickle and send data back to connected client using TCP (usually server)
+
+    Parameters
+    ----------
+    sock : socket
+        Unused, actually.
+    conn : socket
+        Connection/socket that the request arrived through
+    _ : tuple
+        Address of who/whatever sent the request
+    load : any
+        Payload / data if any, champion stats or match history
     """
+
     pickled = pickle.dumps(load) #always pickle
     conn.send(pickled)
     print(f'Sent data to {_}, showing the unpickled format:\n{load}\n')
 
 # Listen for commands and perform appropriate actions
 def main():
+    """
+    Main loop. Sets up a listening socket for incoming requests.
+    Read received data and performs the appropriate action, like
+    saving data or returning data read from 'database' files. (.txt files)
+    """
     with socket() as sock:
         sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         sock.bind(('localhost', 5556))
