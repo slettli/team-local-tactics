@@ -1,8 +1,9 @@
 from rich import print
 from rich.prompt import Prompt
 from rich.table import Table
+from socket import socket
+import pickle
 
-from champlistloader import load_some_champs
 from core import Champion, Match, Shape, Team
 
 
@@ -73,7 +74,7 @@ def print_match_summary(match: Match) -> None:
             red, blue = key.split(', ')
             round_summary.add_row(f'{red} {EMOJI[round[key].red]}',
                                   f'{blue} {EMOJI[round[key].blue]}')
-        print(round_summary)
+        print(round_summary) 
         print('\n')
 
     # Print the score
@@ -89,8 +90,30 @@ def print_match_summary(match: Match) -> None:
     else:
         print('\nDraw :expressionless:')
 
+# Asks server for list of champions and decodes them using pickle
+def get_champions(sock):
+    command = "champions"
+    sock.send(command.encode())
+
+    return pickle.loads(sock.recv(1024))
+
+# Takes server command from main() and forwards to appropriate method
+def server_command(sock,command):
+    match (command):
+        case 'champions':
+            return get_champions(sock)
 
 def main() -> None:
+    # Initialize TCP connection to server
+    sock = socket()
+    server_address = ("localhost", 6666)
+    sock.connect(server_address)
+
+    # Fetch list of champions: db > server > client
+    print("Asking server for champions...")
+    champions = server_command(sock,"champions")
+    print(f"Received reply: {champions}")
+    sock.close()
 
     print('\n'
           'Welcome to [bold yellow]Team Local Tactics[/bold yellow]!'
@@ -98,15 +121,18 @@ def main() -> None:
           'Each player choose a champion each time.'
           '\n')
 
-    champions = load_some_champs()
     print_available_champs(champions)
     print('\n')
+
+    # TODO make below stuff networked. 
+    # TODO move parsing to server
+    # TODO move keeping track of champions to server
 
     player1 = []
     player2 = []
 
     # Champion selection
-    for _ in range(2):
+    for _ in range(2): 
         input_champion('Player 1', 'red', champions, player1, player2)
         input_champion('Player 2', 'blue', champions, player2, player1)
 
