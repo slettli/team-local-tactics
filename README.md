@@ -3,6 +3,8 @@ A game for the mandatory assignment in INF142 Spring 2022.
 
 Based upon the now antiquated team-local-tactics, but converted to work over networks. The basic concept is suspiciously alike a game with a similar name, but this is a simpler rock-paper-scissors-esque implementation that plays in the terminal. 
 
+I've ran and tested this using four terminals on MacOS, with Python 3.10.2.
+
 ## Prerequisites
 * python (3.10.2 recommended)
 * rich
