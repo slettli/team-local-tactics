@@ -21,8 +21,8 @@ Client.py must be run in two instances, one for each player.
 * If you select 'Play', please do so on both clients before Player 1 selects their first champion.
 * Both champions select their champions in order. When Player 1 is done picking three champions, he starts waiting for the match results.
 * At this point, Player 2 is left hanging waiting for its turn. 
- * I guess the server doesn't tell P2 it's their turn. I'm not entirely sure why.
- * **In the Player 2 client, you might have to ctrl+c out of the waiting loop to pick the last champion, if it hangs.**
+  * I guess the server doesn't tell P2 it's their turn. I'm not entirely sure why.
+  * **In the Player 2 client, you might have to ctrl+c out of the waiting loop to pick the last champion, if it hangs.**
 * If you want to patch champions live, edit the some_champs.txt file. It's loaded every round.
 
 If a client disconnects or crashes, the server has to be restarted. I didn't implement a way for the server to clear up player slots in time.
@@ -51,8 +51,8 @@ If a client disconnects or crashes, the server has to be restarted. I didn't imp
 * Clients don't always handle the server abruptly crashing well
 * Crash if P1 picks a champion before P2 is in the 'waiting for turn' state
 * Right before handing in the assignment, I introduced a bug where clients can no longer properly shut down the server. 
- * The client that makes the request and the database shuts down, but not the server or the other client.
- * The server doesn't break its loop or close the sockets and selectors properly.
+  * The client that makes the request and the database shuts down, but not the server or the other client.
+  * The server doesn't break its loop or close the sockets and selectors properly.
 
 ### Current progress
 #### Server
