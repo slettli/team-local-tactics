@@ -22,7 +22,7 @@ Client.py must be run in two instances, one for each player.
 * Both champions select their champions in order. When Player 1 is done picking three champions, he starts waiting for the match results.
 * At this point, Player 2 is left hanging waiting for its turn. 
  * I guess the server doesn't tell P2 it's their turn. I'm not entirely sure why.
- * **In the Player 2 client, you have to ctrl+c out of the waiting loop to pick the last champion.**
+ * **In the Player 2 client, you might have to ctrl+c out of the waiting loop to pick the last champion, if it hangs.**
 * If you want to patch champions live, edit the some_champs.txt file. It's loaded every round.
 
 If a client disconnects or crashes, the server has to be restarted. I didn't implement a way for the server to clear up player slots in time.
