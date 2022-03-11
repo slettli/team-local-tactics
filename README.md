@@ -22,6 +22,7 @@ Client.py must be run in two instances, one for each player.
 * Both champions select their champions in order. When Player 1 is done picking three champions, he starts waiting for the match results.
 * When Player 2 is waiting to pick their third champion, after Player 1 is done, you sometimes have to ctrl+c out of the waiting loop.
 * I don't know why. I couldn't figure out why in time. I guess it hangs.
+* If you want to patch champions live, edit the some_champs.txt file. It's loaded every round.
 
 ## Playing
 * The client will automatically attempt to connect to the server, and present a list of commands if successful.
