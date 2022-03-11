@@ -8,21 +8,28 @@ Based upon the now antiquated team-local-tactics, but converted to work over net
 * rich
 
 ## Usage
-In separate terminals:
+In separate terminals, in order:
 ``` 
-python3 server.py 
 python3 database.py
+python3 server.py 
+python3 client.py 
 python3 client.py 
 ```
 Client.py must be run in two instances, one for each player.
 
+* The clients will automatically connect and be assigned an ID.
+* If you select 'Play', please do so on both clients before Player 1 selects their first champion.
+* Both champions select their champions in order. When Player 1 is done picking three champions, he starts waiting for the match results.
+* When Player 2 is waiting to pick their third champion, after Player 1 is done, you sometimes have to ctrl+c out of the waiting loop.
+* I don't know why. I couldn't figure out why in time. I guess it hangs.
+
 ## Playing
 * The client will automatically attempt to connect to the server, and present a list of commands if successful.
 * Each player picks their respective champions, and the game plays itself.
-* Results are presented
+* Results are presented to both the clients
 
 ## Implementation
-* The game (will) consist, in addition to the core gameplay code, of three separate scripts:
+* The game consist, in addition to the core gameplay code, of three separate scripts:
   * server.py - handles communication to clients and database
   * database.py - responsible for updating and fetching database
   * client.py - takes input and shows results to players
@@ -34,7 +41,11 @@ Client.py must be run in two instances, one for each player.
 * [**Daniel (Instructor)**](https://github.com/daniel-heres) - Base code from team-local-tactics
 
 ## Note to TA's
-This readme will probably change as I add more features and figure out the inner workings of the complete assignment. Not everything written above is true at the moment, like running client.py in separate terminals. That doesn't work yet.
+
+### Bugs
+* The server doesn't automatically free up a 'player slot' if a client abruptly disconnects
+* Clients don't always handle the server abruptly crashing well
+* Crash if P1 picks a champion before P2 is in the 'waiting for turn' state
 
 ### Current progress
 #### Server
@@ -47,12 +58,8 @@ This readme will probably change as I add more features and figure out the inner
   * Play, reset teams, shut down etc.
 * Client takes champion selection input and forwards to server
 * Client can request and print match history
+* Separate player clients
 * Game can be 'played'
 #### Datbase
 * Database transmits champions to Server through sockets
 * Database stores match history (server>database)
-
-### Missing features
-* Separate player clients doesn't work yet
-* Server does not generate formatted output for clients (should it?)
-* No form of concurrency, so server will have a hard time communicating with two clients
